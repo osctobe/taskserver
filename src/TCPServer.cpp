@@ -208,10 +208,23 @@ void TCPTransaction::accept (int socket, struct sockaddr *sa_remote)
   _socket = socket;
 
   // Obtain client info.
-  struct sockaddr_in& sa_cli = *(sockaddr_in *)sa_remote;
+  const void *in_addr;
+  switch (sa_remote->sa_family) {
+  case AF_INET:
+    in_addr = &((sockaddr_in *)sa_remote)->sin_addr;
+    _port = ntohs (((sockaddr_in *)sa_remote)->sin_port);
+    break;
+  case AF_INET6:
+    in_addr = &((sockaddr_in6 *)sa_remote)->sin6_addr;
+    _port = ntohs (((sockaddr_in6 *)sa_remote)->sin6_port);
+    break;
+  default:
+    throw "BUG: got unknown remote address family from accept()";
+  }
+
   char topbuf[512];
-  _address = inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf, sizeof (topbuf));
-  _port    = ntohs (sa_cli.sin_port);
+  _address = inet_ntop (sa_remote->sa_family, in_addr, topbuf, sizeof (topbuf));
+
   if (_debug)
     std::cout << "s: INFO connection from "
               << _address
