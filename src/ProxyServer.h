@@ -36,6 +36,7 @@ public:
   virtual void accept (int socket, struct sockaddr *sa_remote) override;
 
 private:
+  bool process_proxy_v1 (struct sockaddr *sa_remote, char *buf);
   bool process_proxy_v2 (struct sockaddr *sa_remote, char *buf);
 };
 
