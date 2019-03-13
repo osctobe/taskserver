@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2006 - 2018, Paul Beckingham, Federico Hernandez.
+// Copyright 2019, Göteborg Bit Factory.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,54 +23,20 @@
 // http://www.opensource.org/licenses/mit-license.php
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef INCLUDED_TCPSERVER
-#define INCLUDED_TCPSERVER
+#ifndef INCLUDED_PROXYSERVER
+#define INCLUDED_PROXYSERVER
 
 #include <string>
+#include "TCPServer.h"
 
-class TCPTransaction;
-
-class TCPServer
+class ProxyTransaction : public TCPTransaction
 {
 public:
-  TCPServer ();
-  ~TCPServer ();
-  void queue (int);
-  virtual void debug (int);
-  void bind (const std::string&, const std::string&, const std::string&);
-  void listen ();
-  void accept (TCPTransaction& tx);
-
-protected:
-  bool                             _debug       {false};
+  explicit ProxyTransaction(TCPServer&) {}
+  virtual void accept (int socket, struct sockaddr *sa_remote) override;
 
 private:
-  int                              _socket      {0};
-  int                              _queue       {5};
-};
-
-class TCPTransaction
-{
-public:
-  TCPTransaction () = default;
-  ~TCPTransaction ();
-  virtual void accept (int socket, struct sockaddr *sa_cli);
-  void debug ();
-  void limit (int);
-  void send (const std::string&);
-  void recv (std::string&);
-  void getClient (std::string&, int&);
-
-protected:
-  virtual ssize_t do_send (const void *data, size_t len);
-  virtual ssize_t do_recv (void *data, size_t len);
-  size_t recv_block (void *buf, size_t len);
-
-  int                         _socket  {0};
-  unsigned                    _limit   {0};
-  bool                        _debug   {false};
-  std::string                 _address {""};
-  int                         _port    {0};
+  bool process_proxy_v2 (struct sockaddr *sa_remote, char *buf);
 };
 
 #endif

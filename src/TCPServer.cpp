@@ -362,3 +362,32 @@ void TCPTransaction::getClient (std::string& address, int& port)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+ssize_t TCPTransaction::do_send (const void *buf, size_t len)
+{
+  ssize_t status;
+  do
+  {
+    status = ::send (_socket, buf, len, MSG_NOSIGNAL);
+  }
+  while (status < 0 && (errno == EINTR || errno == EAGAIN));
+
+  return status < 0 ? -errno : status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ssize_t TCPTransaction::do_recv (void *buf, size_t len)
+{
+  ssize_t received;
+
+  do
+  {
+    received = ::recv (_socket, buf, len, MSG_WAITALL);
+    if (received < 0 && errno != EINTR && errno != EAGAIN)
+      throw std::string (::strerror (errno));
+  }
+  while (received < 0);
+
+  return received;
+}
+
+////////////////////////////////////////////////////////////////////////////////
